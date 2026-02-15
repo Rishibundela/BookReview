@@ -7,6 +7,8 @@ class Settings(BaseSettings):
     DB_HOST: str
     DB_PORT: int
     DB_NAME: str
+    JWT_SECRET: str
+    JWT_ALGORITHM: str
 
     # This creates the "Universal Connection String" for your tutor's asyncpg
     @property
