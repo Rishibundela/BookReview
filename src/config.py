@@ -9,6 +9,8 @@ class Settings(BaseSettings):
     DB_NAME: str
     JWT_SECRET: str
     JWT_ALGORITHM: str
+    Redis_HOST: str = "localhost"
+    Redis_PORT: int = 6379
 
     # This creates the "Universal Connection String" for your tutor's asyncpg
     @property
