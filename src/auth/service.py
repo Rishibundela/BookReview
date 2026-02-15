@@ -25,6 +25,7 @@ class UserService:
           first_name=user_data.first_name,
           last_name=user_data.last_name,
           password_hash=hash_password(user_data.password),
+          role="user"
       )
 
       session.add(new_user)

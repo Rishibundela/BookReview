@@ -22,7 +22,6 @@ app = FastAPI(
   title="Bookly API",
   version=API_RELEASE, 
   description="A simple REST API for a book review web service built with FastAPI",
-  lifespan=life_span
 )
 
 # 1. Create a "v1" Master Router

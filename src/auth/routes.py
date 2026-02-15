@@ -6,11 +6,12 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from .utils import create_access_token, decode_access_token,verify_password
 from datetime import timedelta, datetime
 from fastapi.responses import JSONResponse
-from .dependencies import AccessTokenBearer, RefreshTokenBearer
+from .dependencies import AccessTokenBearer, RefreshTokenBearer, get_current_user, RoleChecker
 from src.db.redis import add_token_to_blocklist, is_token_blocked 
 
 auth_router = APIRouter()
 user_service = UserService()
+role_checker = RoleChecker(allowed_roles=["admin","user"])  # Example role checker for admin-only routes
 
 REFRESH_TOKEN_EXPIRY = 2
 
@@ -24,6 +25,15 @@ async def create_user(user_data: UserCreate, session: AsyncSession = Depends(get
 
     new_user = await user_service.create_user(user_data, session)
     return new_user
+
+@auth_router.get("/me", response_model=UserRead, status_code=status.HTTP_200_OK)
+async def read_current_user(current_user: dict = Depends(get_current_user), _:bool = Depends(role_checker)):
+    if not current_user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, 
+            detail="Could not validate credentials."
+        )
+    return current_user
   
 @auth_router.post("/login")
 async def login_user(login_data: UserLogin, session: AsyncSession = Depends(get_session)):
@@ -36,7 +46,8 @@ async def login_user(login_data: UserLogin, session: AsyncSession = Depends(get_
             access_token = create_access_token(
                 user_data={
                     "id": str(user.id), 
-                    "email": user.email
+                    "email": user.email,
+                    "role": user.role
                 }
             )
             

@@ -15,6 +15,7 @@ class UserRead(BaseModel):
     email: str
     first_name: str
     last_name: str
+    role: str
     is_verified: bool
     password_hash: str = Field(exclude=True)
     created_at: datetime
