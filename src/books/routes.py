@@ -4,7 +4,7 @@ from src.db.main import get_session
 from src.books.service import BookService
 from fastapi.exceptions import HTTPException
 from typing import List
-from src.books.schemas import Book, BookUpdate, BookCreate
+from src.books.schemas import Book, BookUpdate, BookCreate, BookDetail
 from src.auth.dependencies import AccessTokenBearer, RoleChecker
 
 
@@ -41,7 +41,7 @@ async def create_book(
   new_book = await book_service.create_book(book,user_id, session)
   return new_book
 
-@book_router.get("/{book_uid}", response_model=Book, status_code=status.HTTP_200_OK, dependencies=[role_checker])
+@book_router.get("/{book_uid}", response_model=BookDetail, status_code=status.HTTP_200_OK, dependencies=[role_checker])
 async def get_book(
   book_uid: str = Path(..., description="The ID of the book to retrieve"), 
   session: AsyncSession = Depends(get_session),
