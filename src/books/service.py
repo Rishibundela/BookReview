@@ -1,6 +1,6 @@
 from sqlmodel.ext.asyncio.session import AsyncSession
 from .schemas import BookCreate, BookUpdate
-from .models import Book
+from src.db.models import Book
 from sqlmodel import select
 from datetime import datetime
 
@@ -10,8 +10,13 @@ class BookService:
     result = await session.exec(statement)
     return result.all()  # always returns a list, even if it's empty
   
-  async def create_book(self, book_data: BookCreate, session: AsyncSession):
-    new_book = Book(**book_data.model_dump())
+  async def get_user_books(self, user_id: str, session: AsyncSession):
+    statement = select(Book).where(Book.user_id == user_id).order_by(Book.created_at.desc())
+    result = await session.exec(statement)
+    return result.all()  # always returns a list, even if it's empty
+  
+  async def create_book(self, book_data: BookCreate,user_id: str, session: AsyncSession):
+    new_book = Book(**book_data.model_dump(), user_id=user_id)
 
     session.add(new_book)
     await session.commit()

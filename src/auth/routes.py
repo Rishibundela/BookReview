@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from .schema import UserCreate, UserRead, UserLogin
+from .schema import UserCreate, UserRead, UserLogin, UserReadWithBooks
 from .service import UserService
 from src.db.main import get_session
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -26,7 +26,7 @@ async def create_user(user_data: UserCreate, session: AsyncSession = Depends(get
     new_user = await user_service.create_user(user_data, session)
     return new_user
 
-@auth_router.get("/me", response_model=UserRead, status_code=status.HTTP_200_OK)
+@auth_router.get("/me", response_model=UserReadWithBooks, status_code=status.HTTP_200_OK)
 async def read_current_user(current_user: dict = Depends(get_current_user), _:bool = Depends(role_checker)):
     if not current_user:
         raise HTTPException(
