@@ -5,6 +5,7 @@ from src.db.main import get_session
 from sqlmodel.ext.asyncio.session import AsyncSession
 from fastapi import HTTPException, status
 from .schemas import ReviewCreate
+from sqlmodel import select
 import logging
 
 user_service = UserService()
@@ -38,3 +39,27 @@ class ReviewService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
                 detail="OOPS! Something went wrong while creating the review. Please try again.")
+
+    async def get_review(self, review_id: str, session: AsyncSession):
+        statement = select(Review).where(Review.id == review_id)
+        result = await session.exec(statement)
+        return result.first()
+    
+    async def get_all_reviews(self, session: AsyncSession):
+        statement = select(Review).order_by(Review.created_at.desc())
+        result = await session.exec(statement)
+        return result.all()
+    
+    async def delete_review(self, review_id: str, user_email: str, session: AsyncSession):
+        user = await user_service.get_user_by_email(user_email, session)
+        review = await self.get_review(review_id, session)
+
+        if not review or review.user_id != user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_NOT_FOUND, 
+                detail="Cannot delete this review")
+
+        await session.delete(review)
+        await session.commit()
+
+        return review

@@ -1,7 +1,9 @@
 from sqlmodel.ext.asyncio.session import AsyncSession
+from fastapi import HTTPException,status
 from .schemas import BookCreate, BookUpdate
 from src.db.models import Book
 from sqlmodel import select
+from sqlalchemy.orm import selectinload
 from datetime import datetime
 
 class BookService:
@@ -25,9 +27,20 @@ class BookService:
     return new_book
   
   async def get_book(self, book_id:str, session: AsyncSession):
-    statement = select(Book).where(Book.id == book_id)
-    result = await session.exec(statement)
-    return result.first()   # Returns the first matching book or None if not found
+      result = await session.exec(
+        select(Book)
+        .where(Book.id == book_id)
+        .options(
+            selectinload(Book.tags),
+            selectinload(Book.reviews)
+        )
+    )
+      
+      book = result.first()
+      if not book:
+         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Book not found")
+      
+      return book  # Returns the first matching book or None if not found
   
   async def update_book(self, book_id:str, book_data: BookUpdate, session: AsyncSession):
     book = await self.get_book(book_id, session)

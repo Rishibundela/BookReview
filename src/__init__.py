@@ -2,6 +2,7 @@ from fastapi import FastAPI, APIRouter
 from src.books.routes import book_router
 from src.auth.routes import auth_router
 from src.reviews.routes import review_router
+from src.tags.routes import tags_router
 from contextlib import asynccontextmanager
 from src.db.main import init_db
 
@@ -33,6 +34,8 @@ v1_router = APIRouter(prefix=f"/api/{API_ROUTE_VERSION}")
 v1_router.include_router(book_router, prefix="/books", tags=["Books"])
 v1_router.include_router(auth_router, prefix="/auth", tags=["Auth"])
 v1_router.include_router(review_router, prefix="/reviews", tags=["Reviews"])
+v1_router.include_router(tags_router, prefix="/tags", tags=["Tags"])
+
 
 # 3. Include only the Master Router in your main app
 app.include_router(v1_router)

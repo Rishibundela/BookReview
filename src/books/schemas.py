@@ -2,6 +2,7 @@ from typing import Optional,List
 from pydantic import BaseModel
 from datetime import datetime, date
 from src.reviews.schemas import ReviewRead
+from src.tags.schemas import TagModel
 import uuid
 class Book(BaseModel):
   id: uuid.UUID
@@ -16,6 +17,7 @@ class Book(BaseModel):
 
 class BookDetail(Book):
   reviews: List[ReviewRead]
+  tags: List[TagModel]
 
 
 class BookCreate(BaseModel):
