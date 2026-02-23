@@ -11,6 +11,17 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str
     Redis_HOST: str = "localhost"
     Redis_PORT: int = 6379
+    MAIL_USERNAME: str
+    MAIL_PASSWORD: str
+    MAIL_SERVER: str
+    MAIL_PORT: int
+    MAIL_FROM: str
+    MAIL_FROM_NAME: str
+    MAIL_STARTTLS: bool= True
+    MAIL_SSL_TLS: bool= False
+    USE_CREDENTIALS: bool= True
+    VALIDATE_CERTS: bool= True
+    DOMAIN: str
 
     # This creates the "Universal Connection String" for your tutor's asyncpg
     @property

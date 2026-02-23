@@ -31,4 +31,6 @@ class UserReadWithBooks(UserRead):
 class UserLogin(BaseModel):
     email: str = Field(..., max_length=40, example="john.doe@example.com")
     password: str = Field(..., min_length=6, max_length=20, example="P@ssw0rd")
-    
+
+class EmailModel(BaseModel):
+    addresses: List[str]
