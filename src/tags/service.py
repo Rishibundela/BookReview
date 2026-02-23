@@ -8,6 +8,7 @@ from src.db.models import Tag
 from sqlalchemy.orm import selectinload
 
 from .schemas import TagAddModel, TagCreateModel
+from src.errors import TagNotFound, TagAlreadyExists, BookNotFound
 
 book_service = BookService()
 
@@ -42,7 +43,7 @@ class TagService:
         book = result.first()
 
         if not book:
-            raise HTTPException(status_code=404, detail="Book not found")
+            raise BookNotFound()
 
         for tag_item in tag_data.tags:
             result = await session.exec(
@@ -82,9 +83,7 @@ class TagService:
         tag = result.first()
 
         if tag:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail="Tag exists"
-            )
+            raise TagAlreadyExists()
 
         new_tag = Tag(name=tag_data.name)
 
@@ -99,10 +98,7 @@ class TagService:
         tag = await self.get_tag_by_id(tag_id, session)
 
         if not tag:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Tag not found"
-            )
+            raise TagNotFound()
 
         update_data_dict = tag_update_data.model_dump()
 
@@ -119,10 +115,7 @@ class TagService:
         tag = await self.get_tag_by_id(tag_id, session)
 
         if not tag:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Tag does not exist"
-            )
+            raise TagNotFound()
 
         await session.delete(tag)
         await session.commit()

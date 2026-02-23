@@ -7,6 +7,7 @@ from fastapi import HTTPException, status
 from .schemas import ReviewCreate
 from sqlmodel import select
 import logging
+from src.errors import BookNotFound, UserNotFound
 
 user_service = UserService()
 book_service = BookService()
@@ -19,11 +20,11 @@ class ReviewService:
         try:
             user = await user_service.get_user_by_email(user_email, session)
             if not user:
-                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+                raise UserNotFound()
 
             book = await book_service.get_book(book_id, session)
             if not book:
-                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Book not found")
+                raise BookNotFound()
 
             review = Review(
                 user_id=user.id,

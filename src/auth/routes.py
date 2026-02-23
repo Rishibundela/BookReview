@@ -8,6 +8,7 @@ from datetime import timedelta, datetime
 from fastapi.responses import JSONResponse
 from .dependencies import AccessTokenBearer, RefreshTokenBearer, get_current_user, RoleChecker
 from src.db.redis import add_token_to_blocklist, is_token_blocked 
+from src.errors import InvalidCredentials, UserAlreadyExists, InvalidToken
 
 auth_router = APIRouter()
 user_service = UserService()
@@ -18,10 +19,7 @@ REFRESH_TOKEN_EXPIRY = 2
 @auth_router.post("/signup", response_model=UserRead, status_code=status.HTTP_201_CREATED)
 async def create_user(user_data: UserCreate, session: AsyncSession = Depends(get_session)):
     if await user_service.user_exists(user_data.email, session):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, 
-            detail="User with this email already exists."
-        )
+        raise UserAlreadyExists()
 
     new_user = await user_service.create_user(user_data, session)
     return new_user
@@ -29,10 +27,7 @@ async def create_user(user_data: UserCreate, session: AsyncSession = Depends(get
 @auth_router.get("/me", response_model=UserReadWithBooks, status_code=status.HTTP_200_OK)
 async def read_current_user(current_user: dict = Depends(get_current_user), _:bool = Depends(role_checker)):
     if not current_user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, 
-            detail="Could not validate credentials."
-        )
+        raise InvalidCredentials()
     return current_user
   
 @auth_router.post("/login")
@@ -71,19 +66,13 @@ async def login_user(login_data: UserLogin, session: AsyncSession = Depends(get_
                 }
             )
 
-    raise HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED, 
-        detail="Invalid email or password."
-    )
+    raise InvalidCredentials()
 
 @auth_router.post("/refresh_token")
 async def new_access_token(token_details: dict = Depends(RefreshTokenBearer())):
     expiry_timestamp = token_details.get("exp")
     if datetime.fromtimestamp(expiry_timestamp) < datetime.now():
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, 
-            detail="Refresh token has expired, please log in again."
-        )
+        raise InvalidToken()
     new_access_token = create_access_token(user_data=token_details["user"])
 
     return JSONResponse(
@@ -100,7 +89,4 @@ async def logout_user(token_details: dict = Depends(AccessTokenBearer())):
         await add_token_to_blocklist(jti)
         return JSONResponse(content={"message": "Logout successful"})
     
-    raise HTTPException(
-        status_code=status.HTTP_400_BAD_REQUEST, 
-        detail="Invalid token, logout failed."
-    )
+    raise InvalidToken()

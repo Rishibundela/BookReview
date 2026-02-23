@@ -4,7 +4,7 @@ from .schemas import BookCreate, BookUpdate
 from src.db.models import Book
 from sqlmodel import select
 from sqlalchemy.orm import selectinload
-from datetime import datetime
+from src.errors import BookNotFound
 
 class BookService:
   async def get_all_books(self, session: AsyncSession):
@@ -38,7 +38,7 @@ class BookService:
       
       book = result.first()
       if not book:
-         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Book not found")
+         raise BookNotFound()
       
       return book  # Returns the first matching book or None if not found
   

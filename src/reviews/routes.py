@@ -7,6 +7,7 @@ from src.db.models import User
 
 from .schemas import ReviewCreate, ReviewRead
 from .service import ReviewService
+from src.errors import ReviewNotFound
 
 review_service = ReviewService()
 review_router = APIRouter()
@@ -22,7 +23,7 @@ async def get_all_reviews(session: AsyncSession = Depends(get_session)) -> list[
 async def get_review(review_id: str, session: AsyncSession = Depends(get_session)) -> ReviewRead:
   review = await review_service.get_review(review_id, session)
   if not review:
-    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Review not found")
+    raise ReviewNotFound()
   return review
 
 @review_router.post("/book/{book_id}", response_model=ReviewRead, status_code=status.HTTP_201_CREATED, dependencies=[user_role_checker])
@@ -47,5 +48,5 @@ async def delete_review(
   session: AsyncSession = Depends(get_session)):
   deleted_review = await review_service.delete_review(review_id, current_user.email, session)
   if not deleted_review:
-    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Review not found")
+    raise ReviewNotFound()
   return {"detail": "Review deleted successfully"}

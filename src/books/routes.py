@@ -6,6 +6,7 @@ from fastapi.exceptions import HTTPException
 from typing import List
 from src.books.schemas import Book, BookUpdate, BookCreate, BookDetail
 from src.auth.dependencies import AccessTokenBearer, RoleChecker
+from src.errors import BookNotFound
 
 
 book_router = APIRouter()
@@ -49,7 +50,7 @@ async def get_book(
 
   book = await book_service.get_book(book_uid, session)
   if not book:
-    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Book not found")
+    raise BookNotFound()
   return book
 
 @book_router.patch("/{book_uid}", response_model=Book, status_code=status.HTTP_200_OK, dependencies=[role_checker])
@@ -61,7 +62,7 @@ async def update_book(
 
   updated_book = await book_service.update_book(book_uid, book_update_data, session)
   if not updated_book:
-    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Book not found")
+    raise BookNotFound()
   return updated_book
 
 @book_router.delete("/{book_uid}", status_code=status.HTTP_204_NO_CONTENT, dependencies=[role_checker])
@@ -72,5 +73,5 @@ async def delete_book(
 
   deleted_book = await book_service.delete_book(book_uid, session)
   if not deleted_book:
-    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Book not found")
+    raise BookNotFound()
   return {"detail": "Book deleted successfully"}
