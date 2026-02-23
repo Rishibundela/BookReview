@@ -5,6 +5,7 @@ from src.auth.routes import auth_router
 from src.reviews.routes import review_router
 from src.tags.routes import tags_router
 from .errors import register_error_handlers
+from .middleware import register_middleware
 # from contextlib import asynccontextmanager
 # from src.db.main import init_db
 
@@ -28,7 +29,11 @@ app = FastAPI(
   description="A simple REST API for a book review web service built with FastAPI",
 )
 
-register_error_handlers(app) 
+# Register Error Handlers
+register_error_handlers(app)
+
+# Register Middleware
+register_middleware(app) 
 
 # 1. Create a "v1" Master Router
 v1_router = APIRouter(prefix=f"/api/{API_ROUTE_VERSION}")

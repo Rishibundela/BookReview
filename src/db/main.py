@@ -6,8 +6,7 @@ from src.config import Config
 from typing import AsyncGenerator
 
 engine: AsyncEngine = create_async_engine(
-    Config.DATABASE_URL,
-    echo=True
+    Config.DATABASE_URL
 )
 
 # Create session factory once (standard practice)
