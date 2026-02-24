@@ -11,8 +11,7 @@ class Settings(BaseSettings):
     EMAIL_SECRET: str
     PASSWORD_RESET_SECRET: str
     JWT_ALGORITHM: str
-    Redis_HOST: str = "localhost"
-    Redis_PORT: int = 6379
+    REDIS_URL: str =  "redis://localhost:6379/0"
     MAIL_USERNAME: str
     MAIL_PASSWORD: str
     MAIL_SERVER: str
@@ -35,3 +34,7 @@ class Settings(BaseSettings):
 
 # Initialize the settings
 Config = Settings()
+
+broker_url = Config.REDIS_URL
+result_backend = Config.REDIS_URL
+broker_connection_retry_on_startup = True

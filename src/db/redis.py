@@ -1,13 +1,9 @@
-import redis.asyncio as redis
+import redis.asyncio as aioredis
 from src.config import Config
 
 JTI_EXPIRY = 3600 # in seconds, adjust as needed (e.g., 1 hour)
 
-token_blocklist = redis.Redis(
-    host=Config.Redis_HOST,
-    port=Config.Redis_PORT,
-    decode_responses=True
-)
+token_blocklist = aioredis.from_url(Config.REDIS_URL)
 
 async def add_token_to_blocklist(jti: str):
     await token_blocklist.set(name=jti, value="blocked", ex=JTI_EXPIRY)

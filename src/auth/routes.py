@@ -10,30 +10,14 @@ from fastapi.responses import JSONResponse
 from .dependencies import AccessTokenBearer, RefreshTokenBearer, get_current_user, RoleChecker
 from src.db.redis import add_token_to_blocklist, is_token_blocked 
 from src.errors import InvalidCredentials, UserAlreadyExists, InvalidToken, UserNotFound
-from src.mail import create_message, mail
 from src.config import Config
+from src.celery_tasks import send_verification_email, send_password_reset_email
 
 auth_router = APIRouter()
 user_service = UserService()
 role_checker = RoleChecker(allowed_roles=["admin","user"])  # Example role checker for admin-only routes
 
 REFRESH_TOKEN_EXPIRY = 2
-
-@auth_router.post("/send_mail")
-async def send_mail(emails: EmailModel):
-
-    emails = emails.addresses
-
-    html = "<h1> Welcome to the app </h1>"
-
-    message = create_message(
-        recipients=emails,
-        subject="Welcome", 
-        body=html
-    )
-
-    await mail.send_message(message)
-    return {"message": "Email sent successfully"}
 
 @auth_router.post("/signup", status_code=status.HTTP_201_CREATED)
 async def create_user(user_data: UserCreate, session: AsyncSession = Depends(get_session)):
@@ -45,18 +29,8 @@ async def create_user(user_data: UserCreate, session: AsyncSession = Depends(get
 
     token = email_token_service.create({"email": email})
 
-    link = f"http://{Config.DOMAIN}/api/v1/auth/verify/{token}"
-
-    html_message = f"""
-    <h1>Verify your Email</h1>
-    <p>Please click this <a href="{link}">link</a> to verify your email</p>
-    """
-
-    message = create_message(
-        recipients=[email], subject="Verify your email", body=html_message
-    )
-
-    await mail.send_message(message)
+     # Send background task
+    send_verification_email.delay(email, token)
 
     return {
         "message": "Account Created! Check email to verify your account",
@@ -161,19 +135,8 @@ async def password_reset_request(email_data: PasswordResetRequestModel):
 
     token = reset_token_service.create({"email": email})
 
-    link = f"http://{Config.DOMAIN}/api/v1/auth/password-reset-confirm/{token}"
+    send_password_reset_email.delay(email, token)
 
-    html_message = f"""
-    <h1>Reset Your Password</h1>
-    <p>Please click this <a href="{link}">link</a> to Reset Your Password</p>
-    """
-    subject = "Reset Your Password"
-
-    message = create_message(
-        recipients=[email], subject=subject, body=html_message
-    )
-
-    await mail.send_message(message)
     return JSONResponse(
         content={
             "message": "Please check your email for instructions to reset your password",
