@@ -3,6 +3,12 @@ from sqlmodel import select
 from .utils import hash_password
 from src.db.models import User
 from .schema import UserCreate
+from itsdangerous import (
+    URLSafeTimedSerializer,
+    SignatureExpired,
+    BadSignature
+)
+import logging
 
 class UserService:
   async def get_user_by_email(self, email: str, session: AsyncSession):
@@ -43,4 +49,32 @@ class UserService:
 
     return user
   
+class TokenService:
+
+    def __init__(self, secret_key: str, salt: str):
+        self.serializer = URLSafeTimedSerializer(
+            secret_key=secret_key,
+            salt=salt
+        )
+
+    # -------- CREATE TOKEN --------
+    def create(self, data: dict) -> str:
+        return self.serializer.dumps(data)
+
+    # -------- DECODE TOKEN --------
+    def decode(self, token: str, max_age: int):
+
+        try:
+            return self.serializer.loads(
+                token,
+                max_age=max_age
+            )
+
+        except SignatureExpired:
+            logging.error("Token expired")
+
+        except BadSignature:
+            logging.error("Invalid token")
+
+        return None
   

@@ -31,6 +31,10 @@ class InvalidCredentials(BooklyException):
   """User has provided wrong email or password during login."""
   pass
 
+class AccountNotVerified(BooklyException):
+  """User has not verified their account yet."""
+  pass
+
 class InsufficientPermission(BooklyException):
   """User does not have the necessary permission to perform this action."""
   pass
@@ -107,6 +111,19 @@ def register_error_handlers(app: FastAPI):
             },
         ),
     )
+
+    app.add_exception_handler(
+        AccountNotVerified,
+        create_exception_handler(
+            status_code=status.HTTP_403_FORBIDDEN,
+            initial_detail={
+                "message": "Account not verified yet",
+                "error_code": "account_not_verified",
+                "resolution": "Please verify your account"
+            },
+        ),
+    )
+
     app.add_exception_handler(
         InvalidToken,
         create_exception_handler(
